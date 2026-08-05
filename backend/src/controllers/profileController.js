@@ -30,7 +30,38 @@ const getProfileById = (req, res) => {
   }
 };
 
+const createProfile = (req, res) => {
+  try {
+    const { name, age, bio } = req.body;
+    if (!name || !age) {
+      return res.status(400).json({ message: "Ім'я та вік обов'язкові поля" });
+    }
+
+    const newId =
+      fakeProfiles.length > 0
+        ? fakeProfiles[fakeProfiles.length - 1].id + 1
+        : 1;
+
+    const newProfile = {
+      id: newId,
+      name,
+      age: Number(age),
+      bio: bio || "",
+    };
+
+    fakeProfiles.push(newProfile);
+
+    res.status(201).json(newProfile)({
+      massage: "Профіль успішно створено 🎉",
+      profile: newProfile,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Помилка сервера при створенні профілю" });
+  }
+};
+
 module.exports = {
   getAllProfiles,
   getProfileById,
+  createProfile,
 };
