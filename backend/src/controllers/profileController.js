@@ -60,8 +60,41 @@ const createProfile = (req, res) => {
   }
 };
 
+const deleteProfile = (req, res) => {
+  try {
+    const profileId = Number(req.params.id);
+    const profileIndex = fakeProfiles.findIndex((p) => p.id === profileId);
+    if (profileIndex === -1) {
+      return res.status(404).json({ message: "Профіль не знайдено 😢" });
+    }
+    fakeProfiles.splice(profileIndex, 1);
+    res.status(200).json({ message: "Профіль успішно видалено 🗑️" });
+  } catch (error) {
+    res.status(500).json({ message: "Помилка сервера при видаленні профілю" });
+  }
+};
+
+const updateProfile = (req, res) => {
+  try {
+    const profileId = Number(req.params.id);
+    const { name, age, bio } = req.body;
+    const profile = fakeProfiles.find((p) => p.id === profileId);
+    if (!profile) {
+      return res.status(404).json({ message: "Профіль не знайдено 😢" });
+    }
+    if (name) profile.name = name;
+    if (age) profile.age = Number(age);
+    if (bio) profile.bio = bio;
+    res.status(200).json({ message: "Профіль успішно оновлено ✏️", profile });
+  } catch (error) {
+    res.status(500).json({ message: "Помилка сервера при оновленні профілю" });
+  }
+};
+
 module.exports = {
   getAllProfiles,
   getProfileById,
   createProfile,
+  deleteProfile,
+  updateProfile,
 };
