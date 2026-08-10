@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 
 const profileRoutes = require("./routes/profileRoutes");
+const authRoutes = require("./routes/authRoutes");
 const db = require("./config/db");
 
 const app = express();
@@ -13,6 +14,8 @@ const createTables = async () => {
   const queryText = `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
+      email VARCHAR(150) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
       name VARCHAR(100) NOT NULL,
       age INTEGER NOT NULL,
       bio TEXT DEFAULT ''
@@ -28,6 +31,7 @@ const createTables = async () => {
 
 createTables();
 
+app.use("/api", authRoutes);
 app.use("/api", profileRoutes);
 
 app.get("/", (req, res) => {
