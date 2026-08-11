@@ -2,14 +2,16 @@ const express = require("express");
 const router = express.Router();
 const profileController = require("../controllers/profileController");
 
-router.get("/profiles", profileController.getAllProfiles);
+const { protect } = require("../middlewares/authMiddleware");
 
-router.get("/profiles/:id", profileController.getProfileById);
+router.get("/profiles", protect, profileController.getAllProfiles);
 
-router.post("/profiles", profileController.createProfile);
+router.get("/profiles/:id", protect, profileController.getProfileById);
 
-router.delete("/profiles/:id", profileController.deleteProfile);
+router.post("/profiles", protect, profileController.createProfile);
 
-router.patch("/profiles/:id", profileController.updateProfile);
+router.delete("/profiles/:id", protect, profileController.deleteProfile);
+
+router.patch("/profiles/:id", protect, profileController.updateProfile);
 
 module.exports = router;
