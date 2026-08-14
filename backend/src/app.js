@@ -1,5 +1,6 @@
 const express = require("express");
 require("dotenv").config();
+const cors = require("cors");
 
 const http = require("http");
 const { Server } = require("socket.io");
@@ -15,10 +16,17 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
+    credentials: true,
   },
 });
 
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Дозволяємо нашому React-фронтенду
+    credentials: true, // Дозволяємо передачу Cookies та сесій
+  }),
+);
 app.use(express.json());
 
 const createTables = async () => {

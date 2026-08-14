@@ -1,17 +1,41 @@
 import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
 import { LoginCredentials } from "../types/auth";
+import api from "../api/client"; // Імпортуємо наш створений клієнт
 
 export default function Login() {
-  // 1. Ініціалізація хука з прив'язкою до нашого TypeScript-інтерфейсу
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginCredentials>();
 
-  // 2. Функція, яка спрацює ТІЛЬКИ у разі успішної валідації
-  const onSubmit = (data: LoginCredentials) => {
-    console.log("Дані готові для відправки на Node.js бекенд:", data);
+  // Робимо функцію асинхронною (async), бо запити до сервера займають час
+  const onSubmit = async (data: LoginCredentials) => {
+    try {
+      console.log("Фронтенд: Відправляємо запит на бекенд...");
+
+      // Під капотом Axios зробить POST-запит на http://localhost:5000/api/auth/login
+      const response = await api.post("/auth/login", data);
+
+      console.log("Бекенд успішно відповів! Дані:", response.data);
+      alert("Успішний вхід у систему!");
+
+      // Тут у майбутньому буде логіка: збереження токена та редірект на головну сторінку знайомств
+    } catch (error: any) {
+      // Логіка обробки помилок під капотом Axios:
+      // Якщо сервер повернув помилку (наприклад, 401 Wrong Password або 404 User Not Found)
+      if (error.response) {
+        console.error("Помилка від сервера Node.js:", error.response.data);
+        alert(error.response.data.message || "Неправильний email або пароль");
+      } else {
+        // Якщо сервер взагалися вимкнений або немає інтернету
+        console.error("Сервер бекенду не відповідає:", error.message);
+        alert(
+          "Не вдалося зв'язатися з сервером. Перевірте, чи запущений Node.js!",
+        );
+      }
+    }
   };
 
   return (
@@ -24,7 +48,6 @@ export default function Login() {
         fontFamily: "sans-serif",
       }}
     >
-      {/* 3. Перехоплення нативної події відправки форми */}
       <form
         onSubmit={handleSubmit(onSubmit)}
         style={{
@@ -39,15 +62,14 @@ export default function Login() {
       >
         <h2>Вхід у LoveApp</h2>
 
-        {/* Блок інпуту Email */}
         <div>
           <label style={{ display: "block", marginBottom: "5px" }}>
             Електронна пошта
           </label>
-          {/* 4. Реєстрація інпуту з правилами валідації */}
           <input
             type="text"
             placeholder="example@mail.com"
+            disabled={isSubmitting} // Блокуємо інпут під час запиту
             {...register("email", {
               required: "Це поле є обов'язковим",
               pattern: {
@@ -57,7 +79,6 @@ export default function Login() {
             })}
             style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
           />
-          {/* 5. Умовний рендеринг помилки */}
           {errors.email && (
             <p style={{ color: "red", margin: "4px 0 0 0", fontSize: "13px" }}>
               {errors.email.message}
@@ -65,7 +86,6 @@ export default function Login() {
           )}
         </div>
 
-        {/* Блок інпуту Пароля */}
         <div>
           <label style={{ display: "block", marginBottom: "5px" }}>
             Пароль
@@ -73,6 +93,7 @@ export default function Login() {
           <input
             type="password"
             placeholder="••••••••"
+            disabled={isSubmitting} // Блокуємо інпут під час запиту
             {...register("password", {
               required: "Введіть пароль",
               minLength: {
@@ -83,26 +104,44 @@ export default function Login() {
             style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
           />
           {errors.password && (
-            <p style={{ color: "red", margin: "4px 0 0 0", fontSize: "13px" }}>
+            <span style={{ color: "red", fontSize: "13px" }}>
               {errors.password.message}
-            </p>
+            </span>
           )}
         </div>
 
+        {/* Кнопка автоматично блокується, поки йде запит (isSubmitting = true) */}
         <button
           type="submit"
+          disabled={isSubmitting}
           style={{
             padding: "10px",
-            backgroundColor: "#ff4b6e",
+            backgroundColor: isSubmitting ? "#ccc" : "#ff4b6e",
             color: "white",
             border: "none",
             borderRadius: "4px",
-            cursor: "pointer",
+            cursor: isSubmitting ? "not-allowed" : "pointer",
             fontWeight: "bold",
           }}
         >
-          Увійти
+          {isSubmitting ? "Зв'язок із сервером..." : "Увійти"}
         </button>
+
+        <div
+          style={{ textAlign: "center", marginTop: "15px", fontSize: "14px" }}
+        >
+          <span>Ще немає акаунту? </span>
+          <Link
+            to="/register"
+            style={{
+              color: "#ff4b6e",
+              textDecoration: "none",
+              fontWeight: "bold",
+            }}
+          >
+            Зареєструватися
+          </Link>
+        </div>
       </form>
     </div>
   );
