@@ -2,8 +2,12 @@ import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { LoginCredentials } from "../types/auth";
 import api from "../api/client"; // Імпортуємо наш створений клієнт
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Login() {
+  const auth = useContext(AuthContext);
+
   const {
     register,
     handleSubmit,
@@ -19,7 +23,11 @@ export default function Login() {
       const response = await api.post("/auth/login", data);
 
       console.log("Бекенд успішно відповів! Дані:", response.data);
-      alert("Успішний вхід у систему!");
+
+      if (auth) {
+        // Викликаємо метод login з нашого контексту, передаючи токен
+        auth.login(response.data.token);
+      }
 
       // Тут у майбутньому буде логіка: збереження токена та редірект на головну сторінку знайомств
     } catch (error: any) {

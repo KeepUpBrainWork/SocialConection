@@ -9,3 +9,12 @@ export interface RegisterCredentials extends LoginCredentials {
   birthDate: string;
   confirmPassword: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  gender: string;
+  avatarUrl?: string;
+  createdAt: string;
+}
