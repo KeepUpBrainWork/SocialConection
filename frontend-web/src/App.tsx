@@ -1,21 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, AuthContext } from "./context/AuthContext";
-import { useContext } from "react";
+import { AuthProvider } from "./context/AuthContext";
+import { useAuth } from "./hooks/useAuth";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Matches from "./pages/Matches";
 
-// Створюємо допоміжний внутрішній компонент для контролю рендерингу
 function AppRoutes() {
-  // Витягуємо дані з нашої глобальної хмари за допомогою хука useContext
-  const auth = useContext(AuthContext);
+  // Використовуємо наш новий ергономічний хук замість сирого useContext
+  const auth = useAuth();
 
-  // Обов'язкова архітектурна перевірка: якщо контекст не знайдено (наприклад, файл не підключено)
-  if (!auth) {
-    return null;
-  }
-
-  // Логіка під капотом: поки йде фоновий запит до Node.js (/auth/me), показуємо екран очікування
-  if (auth.loading) {
+  // Показуємо екран очікування, поки Node.js перевіряє HTTP-Only Cookie (/auth/me)
+  if (auth.isLoading) {
     return (
       <div
         style={{
@@ -33,8 +28,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Якщо користувач вже авторизований, і намагається зайти на /login або /register, 
-          ми за допомогою компонента Navigate автоматично перенаправляємо його на майбутню головну сторінку /matches */}
+      {/* Гості бачать форми. Авторизовані — автоматично редіректяться на /matches */}
       <Route
         path="/login"
         element={
@@ -52,37 +46,16 @@ function AppRoutes() {
         }
       />
 
-      {/* Заглушка для головної сторінки сайту знайомств */}
+      {/* Захищений маршрут. Доступний лише якщо isAuthenticated === true */}
       <Route
         path="/matches"
         element={
-          auth.isAuthenticated ? (
-            <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-              <h2>Вітаємо, {auth.user?.name}!</h2>
-              <p>Тут буде розкрутка анкет для сайту знайомств.</p>
-              <button
-                onClick={auth.logout}
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#333",
-                  color: "white",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                Вийти з акаунта
-              </button>
-            </div>
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          auth.isAuthenticated ? <Matches /> : <Navigate to="/login" replace />
         }
       />
 
-      {/* Автоматичний редірект з кореня сайту */}
+      {/* Маршрути за замовчуванням та обробка помилок */}
       <Route path="/" element={<Navigate to="/login" replace />} />
-
-      {/* 404 Помилка */}
       <Route
         path="*"
         element={
@@ -95,14 +68,10 @@ function AppRoutes() {
   );
 }
 
-// Головний компонент-архітектор додатка
 export default function App() {
   return (
-    // 1. Огортаємо ВСЕ в AuthProvider. Тепер хмара контексту доступна для всього, що знаходиться всередині
     <AuthProvider>
-      {/* 2. Підключаємо керування URL-історією браузера */}
       <BrowserRouter>
-        {/* 3. Запускаємо наші маршрути */}
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
